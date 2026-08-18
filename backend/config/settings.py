@@ -146,7 +146,7 @@ AI_IMPORT = {
 # Where the React app is served from. Add your production domain via
 # FRONTEND_ORIGINS="https://exams.example.com" (comma separated).
 CORS_ALLOWED_ORIGINS = [
-    "https://testlive-flax.vercel.app"
+    "https://testlive-flax.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:4173",
@@ -157,6 +157,7 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
 ]
+
 
 if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
