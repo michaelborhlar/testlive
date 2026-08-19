@@ -150,7 +150,7 @@ class Question(models.Model):
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="choices")
     order = models.PositiveIntegerField(default=0)
-    text = models.CharField(max_length=500)
+    text = models.TextField()
     is_correct = models.BooleanField(default=False)
 
     class Meta:
