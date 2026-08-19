@@ -1,7 +1,9 @@
 """Django settings for the Graduate Trainee Assessment platform."""
 import os
+import dj_database_url
 from datetime import timedelta
 from pathlib import Path
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -60,26 +62,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # SQLite by default; set DB_NAME + DB_HOST to switch to PostgreSQL in production.
-if os.environ.get("DB_NAME") and os.environ.get("DB_HOST"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ["DB_NAME"],
-            "USER": os.environ.get("DB_USER", "postgres"),
-            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-            "HOST": os.environ["DB_HOST"],
-            "PORT": os.environ.get("DB_PORT", "5432"),
-            "CONN_MAX_AGE": 60,
-        }
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-
+DATABASES = {'default': dj_database_url.config(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}", conn_max_age=600, ssl_require=True)}
 AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
