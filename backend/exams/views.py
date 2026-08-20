@@ -142,7 +142,6 @@ class QuestionImageUploadView(APIView):
 
     ALLOWED = {"image/png", "image/jpeg", "image/gif", "image/webp"}
     MAX_BYTES = 5 * 1024 * 1024
-
     def post(self, request):
         upload = request.FILES.get("image")
         if not upload:
@@ -158,12 +157,23 @@ class QuestionImageUploadView(APIView):
 
             Image.open(io.BytesIO(data)).verify()
         except ImportError:
-            pass  # Pillow is optional; the content type check still applies.
+            pass
         except Exception as exc:
             raise ValidationError({"image": "That file is not a readable image."}) from exc
 
         extension = (upload.name or "png").rsplit(".", 1)[-1]
-        path = store_image(data, extension)
+
+        # --- TEMPORARY DEBUG BLOCK — remove after diagnosing ---
+        try:
+            path = store_image(data, extension)
+        except Exception as exc:
+            import traceback
+            return Response(
+                {"debug_error": str(exc), "debug_trace": traceback.format_exc()},
+                status=500,
+            )
+        # --- END TEMPORARY DEBUG BLOCK ---
+
         return Response(
             {
                 "image": path,
