@@ -75,14 +75,14 @@ class AdminTestViewSet(viewsets.ModelViewSet):
             raise ValidationError("Add at least one question before publishing.")
         test.status = Test.Status.PUBLISHED
         test.save(update_fields=["status", "updated_at"])
-        return Response(TestSerializer(test).data)
+        return Response(TestSerializer(test, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def unpublish(self, request, pk=None):
         test = self.get_object()
         test.status = Test.Status.DRAFT
         test.save(update_fields=["status", "updated_at"])
-        return Response(TestSerializer(test).data)
+        return Response(TestSerializer(test, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def duplicate(self, request, pk=None):
@@ -102,7 +102,10 @@ class AdminTestViewSet(viewsets.ModelViewSet):
                 choice.pk = None
                 choice.question = question
                 choice.save()
-        return Response(TestSerializer(source).data, status=status.HTTP_201_CREATED)
+        return Response(
+            TestSerializer(source, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=True, methods=["get"])
     def attempts(self, request, pk=None):
@@ -162,7 +165,10 @@ class QuestionImageUploadView(APIView):
         extension = (upload.name or "png").rsplit(".", 1)[-1]
         path = store_image(data, extension)
         return Response(
-            {"image": path, "image_url": f"{settings.MEDIA_URL}{path}"},
+            {
+                "image": path,
+                "image_url": request.build_absolute_uri(f"{settings.MEDIA_URL}{path}"),
+            },
             status=status.HTTP_201_CREATED,
         )
 

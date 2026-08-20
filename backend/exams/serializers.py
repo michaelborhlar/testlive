@@ -24,8 +24,7 @@ class ChoiceSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     choices = ChoiceSerializer(many=True, required=False)
-    image_url = serializers.CharField(read_only=True)
-
+    image_url = serializers.SerializerMethodField()
     class Meta:
         model = Question
         fields = [
@@ -42,6 +41,11 @@ class QuestionSerializer(serializers.ModelSerializer):
             "explanation",
             "choices",
         ]
+    def get_image_url(self, obj):
+        request = self.context.get("request")
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        return None
 
     def validate(self, attrs):
         qtype = attrs.get("type", getattr(self.instance, "type", Question.Type.SINGLE))
@@ -221,7 +225,7 @@ class CandidateChoiceSerializer(serializers.ModelSerializer):
 class CandidateQuestionSerializer(serializers.ModelSerializer):
     choices = serializers.SerializerMethodField()
     number = serializers.SerializerMethodField()
-    image_url = serializers.CharField(read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
@@ -240,7 +244,13 @@ class CandidateQuestionSerializer(serializers.ModelSerializer):
     def get_number(self, obj):
         order = self.context.get("question_order", [])
         return order.index(obj.id) + 1 if obj.id in order else obj.order + 1
-
+    
+    def get_image_url(self, obj):
+        request = self.context.get("request")
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        return None
+    
     def get_choices(self, obj):
         choices = list(obj.choices.all())
         attempt = self.context.get("attempt")
@@ -392,7 +402,7 @@ class AttemptResultSerializer(serializers.ModelSerializer):
                     "question_id": question.id,
                     "text": question.text,
                     "type": question.type,
-                    "image_url": question.image_url,
+                    "image_url": self.context["request"].build_absolute_uri(question.image.url) if question.image else None,
                     "points": question.points,
                     "points_awarded": answer.points_awarded if answer else 0,
                     "is_correct": answer.is_correct if answer else False,
