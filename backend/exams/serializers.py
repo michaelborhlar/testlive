@@ -226,6 +226,7 @@ class CandidateChoiceSerializer(serializers.ModelSerializer):
 class CandidateQuestionSerializer(serializers.ModelSerializer):
     choices = serializers.SerializerMethodField()
     number = serializers.SerializerMethodField()
+    image = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     image_url = serializers.SerializerMethodField()
 
     class Meta:
