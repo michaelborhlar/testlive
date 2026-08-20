@@ -19,7 +19,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "cloudinary_storage",
     "django.contrib.staticfiles",
+    "cloudinary",
     # third party
     "rest_framework",
     "corsheaders",
@@ -90,7 +92,11 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": (
+        {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"}
+        if not DEBUG
+        else {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+    ),
     # The hashed manifest needs `collectstatic` to have run, so keep the plain
     # finder in development.
     "staticfiles": {
@@ -100,6 +106,11 @@ STORAGES = {
             else "whitenoise.storage.CompressedManifestStaticFilesStorage"
         )
     },
+}
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": os.environ.get("CLOUDINARY_API_KEY"),
+    "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

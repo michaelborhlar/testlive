@@ -17,3 +17,5 @@ psycopg2-binary
 dj-database-url 
 python-decouple
 #   pip install "psycopg[binary]>=3.2"
+django-cloudinary-storage 
+cloudinary
