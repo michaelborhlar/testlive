@@ -24,6 +24,7 @@ class ChoiceSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     choices = ChoiceSerializer(many=True, required=False)
+    image = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     image_url = serializers.SerializerMethodField()
     class Meta:
         model = Question
