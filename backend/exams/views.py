@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db.models import Avg, Count, Q
 from django.utils import timezone
+from django.core.files.storage import default_storage
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -175,12 +176,12 @@ class QuestionImageUploadView(APIView):
         # --- END TEMPORARY DEBUG BLOCK ---
 
         return Response(
-            {
-                "image": path,
-                "image_url": request.build_absolute_uri(f"{settings.MEDIA_URL}{path}"),
-            },
-            status=status.HTTP_201_CREATED,
-        )
+    {
+        "image": path,
+        "image_url": default_storage.url(path),
+    },
+    status=status.HTTP_201_CREATED,
+)
 
 
 class QuestionImportView(APIView):
