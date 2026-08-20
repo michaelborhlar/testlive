@@ -67,25 +67,31 @@ class AdminTestViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        # --- TEMPORARY DEBUG ---
-        try:
-            serializer.save(created_by=self.request.user)
-        except Exception as exc:
-            import traceback
-            raise ValidationError({"debug_error": str(exc), "debug_trace": traceback.format_exc()})
-        # --- END TEMPORARY DEBUG ---
+        serializer.save(created_by=self.request.user)
 
-    def perform_update(self, serializer):
-        # --- TEMPORARY DEBUG ---
+    # --- TEMPORARY DEBUG: wraps the whole request, not just save() ---
+    def update(self, request, *args, **kwargs):
+        import traceback
         try:
-            serializer.save()
+            return super().update(request, *args, **kwargs)
         except Exception as exc:
-            import traceback
-            raise ValidationError({"debug_error": str(exc), "debug_trace": traceback.format_exc()})
-        # --- END TEMPORARY DEBUG ---
+            return Response(
+                {"debug_error": str(exc), "debug_trace": traceback.format_exc()},
+                status=500,
+            )
+
+    def create(self, request, *args, **kwargs):
+        import traceback
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as exc:
+            return Response(
+                {"debug_error": str(exc), "debug_trace": traceback.format_exc()},
+                status=500,
+            )
+    # --- END TEMPORARY DEBUG ---
 
     ...
-
 class AdminAttemptViewSet(viewsets.ReadOnlyModelViewSet):
     """Read-only access to every candidate attempt, with full review detail."""
 
