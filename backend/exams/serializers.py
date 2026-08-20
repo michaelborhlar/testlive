@@ -3,6 +3,7 @@ import random
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
+from django.core.files.storage import default_storage
 
 from accounts.serializers import UserSerializer
 
@@ -43,9 +44,8 @@ class QuestionSerializer(serializers.ModelSerializer):
             "choices",
         ]
     def get_image_url(self, obj):
-        request = self.context.get("request")
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
+        if obj.image:
+            return default_storage.url(obj.image)
         return None
 
     def validate(self, attrs):
@@ -226,7 +226,6 @@ class CandidateChoiceSerializer(serializers.ModelSerializer):
 class CandidateQuestionSerializer(serializers.ModelSerializer):
     choices = serializers.SerializerMethodField()
     number = serializers.SerializerMethodField()
-    image = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     image_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -248,9 +247,8 @@ class CandidateQuestionSerializer(serializers.ModelSerializer):
         return order.index(obj.id) + 1 if obj.id in order else obj.order + 1
     
     def get_image_url(self, obj):
-        request = self.context.get("request")
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
+        if obj.image:
+            return default_storage.url(obj.image)
         return None
     
     def get_choices(self, obj):
@@ -427,7 +425,10 @@ class AttemptResultSerializer(serializers.ModelSerializer):
         if question.type == Question.Type.SHORT_TEXT:
             return " / ".join(question.accepted_answers.splitlines())
         return ", ".join(c.text for c in question.choices.filter(is_correct=True))
-
+    def _image_url(self, question):
+        if question.image:
+            return default_storage.url(question.image)
+        return None
 
 class AttemptRowSerializer(serializers.ModelSerializer):
     """Row in the admin results table."""
