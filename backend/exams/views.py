@@ -91,6 +91,51 @@ class AdminTestViewSet(viewsets.ModelViewSet):
             )
     # --- END TEMPORARY DEBUG ---
 
+    @action(detail=True, methods=["post"])
+    def publish(self, request, pk=None):
+        test = self.get_object()
+        if not test.pool_size:
+            raise ValidationError("Add at least one question before publishing.")
+        test.status = Test.Status.PUBLISHED
+        test.save(update_fields=["status", "updated_at"])
+        return Response(TestSerializer(test, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"])
+    def unpublish(self, request, pk=None):
+        test = self.get_object()
+        test.status = Test.Status.DRAFT
+        test.save(update_fields=["status", "updated_at"])
+        return Response(TestSerializer(test, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"])
+    def duplicate(self, request, pk=None):
+        source = self.get_object()
+        questions = list(source.questions.prefetch_related("choices"))
+        source.pk = None
+        source.title = f"{source.title} (copy)"
+        source.status = Test.Status.DRAFT
+        source.created_by = request.user
+        source.save()
+        for question in questions:
+            choices = list(question.choices.all())
+            question.pk = None
+            question.test = source
+            question.save()
+            for choice in choices:
+                choice.pk = None
+                choice.question = question
+                choice.save()
+        return Response(
+            TestSerializer(source, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["get"])
+    def attempts(self, request, pk=None):
+        test = self.get_object()
+        rows = test.attempts.select_related("candidate", "test")
+        return Response(AttemptRowSerializer(rows, many=True).data)
+
     ...
 class AdminAttemptViewSet(viewsets.ReadOnlyModelViewSet):
     """Read-only access to every candidate attempt, with full review detail."""
