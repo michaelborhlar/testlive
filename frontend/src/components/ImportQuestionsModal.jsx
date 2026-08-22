@@ -257,9 +257,17 @@ Explanation: Abuja became the capital in 1991.`}
                     </div>
                   </div>
 
-                  {question.image && (
+                  {/* FIX: use the absolute image_url the backend now returns
+                      for each parsed question, instead of hand-building
+                      "/media/<path>" here. That manual prefix was a relative
+                      URL, which the browser resolves against the FRONTEND's
+                      own domain (Vercel) instead of the Django backend
+                      (Render) — this was the third spot doing that, missed
+                      earlier because it lives in this modal rather than in
+                      TestEditor.jsx. */}
+                  {question.image_url && (
                     <img
-                      src={`/media/${question.image}`}
+                      src={question.image_url}
                       alt="Figure found in the document"
                       className="mt-2 h-24 rounded-lg border border-white/10 bg-white object-contain p-1"
                     />
