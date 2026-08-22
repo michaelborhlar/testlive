@@ -44,9 +44,17 @@ class QuestionSerializer(serializers.ModelSerializer):
             "choices",
         ]
     def get_image_url(self, obj):
-        if obj.image:
-            return default_storage.url(obj.image)
-        return None
+        # FIX: build an absolute URL (schema + host) using the request,
+        # instead of a host-relative path. A relative "/media/..." path
+        # resolves against whatever domain the browser is currently on
+        # (the frontend), not the Django backend, which is what was
+        # producing 404s when frontend and backend are on different
+        # domains (e.g. Vercel + Render).
+        if not obj.image:
+            return None
+        request = self.context.get("request")
+        url = default_storage.url(obj.image)
+        return request.build_absolute_uri(url) if request else url
 
     def validate(self, attrs):
         qtype = attrs.get("type", getattr(self.instance, "type", Question.Type.SINGLE))
@@ -247,9 +255,12 @@ class CandidateQuestionSerializer(serializers.ModelSerializer):
         return order.index(obj.id) + 1 if obj.id in order else obj.order + 1
     
     def get_image_url(self, obj):
-        if obj.image:
-            return default_storage.url(obj.image)
-        return None
+        # FIX: same absolute-URL fix as QuestionSerializer.get_image_url above.
+        if not obj.image:
+            return None
+        request = self.context.get("request")
+        url = default_storage.url(obj.image)
+        return request.build_absolute_uri(url) if request else url
     
     def get_choices(self, obj):
         choices = list(obj.choices.all())

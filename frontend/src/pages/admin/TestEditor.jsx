@@ -150,7 +150,13 @@ export default function TestEditor() {
       points: question.points || 1,
       image: question.image || '',
       image_caption: question.image_caption || '',
-      image_url: question.image ? `/media/${question.image}` : '',
+      // FIX: use the absolute image_url the backend now returns for each
+      // imported question, instead of hand-building "/media/<path>" here.
+      // That manual prefix was a relative URL, which the browser resolves
+      // against the FRONTEND's own domain (Vercel) instead of the Django
+      // backend (Render) — the root cause of the 404s and the
+      // "media/media/..." duplication once it got saved and re-served.
+      image_url: question.image_url || '',
       accepted_answers: question.accepted_answers || '',
       explanation: question.explanation || '',
       choices: (question.choices || []).map((choice) => ({

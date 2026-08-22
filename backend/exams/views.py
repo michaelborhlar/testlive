@@ -197,13 +197,18 @@ class QuestionImageUploadView(APIView):
             )
         # --- END TEMPORARY DEBUG BLOCK ---
 
+        # FIX: build_absolute_uri instead of a bare relative path — the
+        # previous version returned "/media/questions/xxx.png", which the
+        # browser resolves against the FRONTEND's own domain (Vercel) since
+        # it has no scheme/host of its own, producing a 404 there instead
+        # of reaching the Django backend.
         return Response(
-    {
-        "image": path,
-        "image_url": default_storage.url(path),
-    },
-    status=status.HTTP_201_CREATED,
-)
+            {
+                "image": path,
+                "image_url": request.build_absolute_uri(default_storage.url(path)),
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class QuestionImportView(APIView):
@@ -244,6 +249,18 @@ class QuestionImportView(APIView):
                     "question (1., 2., …), label the options (A., B., …) and give the "
                     "answer as 'Answer: B' — or add an answer key at the end."
                 }
+            )
+
+        # FIX: attach an absolute image_url to each parsed question so the
+        # frontend's import-review screen can just use it directly, instead
+        # of hand-building "/media/<path>" itself (which was the source of
+        # the "media/media/..." duplication and the 404s).
+        for question in questions:
+            image_path = question.get("image")
+            question["image_url"] = (
+                request.build_absolute_uri(default_storage.url(image_path))
+                if image_path
+                else None
             )
 
         return Response(
